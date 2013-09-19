@@ -12,10 +12,13 @@
 #include <ctime>
 #include <vector>
 #include <memory>
+#include <stdexcept>
 #include <odb/core.hxx>
 #include <odb/lazy-ptr.hxx>
 
 class todoList;
+
+typedef std::vector<odb::lazy_weak_ptr<todoList> > todoLists;
 
 enum priority_t {
 	lowest, low, normal, high, highest
@@ -47,7 +50,7 @@ private:
 	id_column("task_id") \
 	value_column("todo_list_title") \
 	table("is_on")
-	std::vector<odb::lazy_weak_ptr<todoList> > todoLists_; //TODO
+	todoLists todoLists_;
 
 	void setUpdated();
 
