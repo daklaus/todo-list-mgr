@@ -72,3 +72,32 @@ time_t task::getUpdated() const {
 void task::setUpdated() {
 	updated_ = time(NULL);
 }
+
+const todoLists& task::getTodoLists() const {
+	return todoLists_;
+}
+
+//void task::addTodoList(const odb::lazy_shared_ptr<todoList>& todoList) {
+//	todoLists_.push_back(todoList);
+//}
+//
+//void task::addTodoList(const odb::lazy_shared_ptr<todoList>& todoList,
+//		int position) {
+//	todoLists::iterator pos(todoLists_.begin() + position);
+//
+//	if (pos > todoLists_.end() || pos < todoLists_.begin())
+//		throw out_of_range(
+//				"The position is out of the range of the todo-list vector");
+//
+//	todoLists_.insert(pos, todoList);
+//}
+//
+//void task::removeTodoList(int position) {
+//	todoLists::iterator pos(todoLists_.begin() + position);
+//
+//	if (pos > todoLists_.end() - 1 || pos < todoLists_.begin())
+//		throw out_of_range(
+//				"The position is out of the range of the todo-list vector");
+//
+//	todoLists_.erase(pos);
+//}

@@ -22,16 +22,46 @@ int main(int argc, char* argv[]) {
 
 		unsigned long first_id, second_id;
 
-		lazy_shared_ptr<task> first(*db, new task("Hole Wäsche"));
-		lazy_shared_ptr<task> second(*db, new task("Lerne Black Sabbath - Iron Man"));
-		shared_ptr<todoList> standard(new todoList("Standard List"));
+		shared_ptr<todoList> list1(new todoList("Standard List"));
+		shared_ptr<todoList> list2(new todoList("List2"));
+		shared_ptr<task> task1(new task("Hole Wäsche"));
+		shared_ptr<task> task2(new task("Lerne Black Sabbath - Iron Man"));
 
-//		standard->getTasks().push_back(first);
+		list1->addTask(task1);
+		list1->addTask(task2);
+		list2->addTask(task1);
+		list2->addTask(task2);
 
 		transaction t(db->begin());
 
-		first_id = db->persist(*first);
-		second_id = db->persist(*second);
+		first_id = db->persist(*task1);
+		second_id = db->persist(*task2);
+		db->persist(*list1);
+		db->persist(*list2);
+
+		t.commit();
+
+		t.reset(db->begin());
+
+		db->reload(*task1);
+
+		t.commit();
+
+		t.reset(db->begin());
+
+		const todoLists& task1Lists(task1->getTodoLists());
+
+		int j(0);
+		cout << "Todo-lists of task1:" << endl;
+		for (todoLists::const_iterator i(task1Lists.begin());
+				i != task1Lists.end(); ++i, ++j) {
+
+			cout << "[" << j << "]: ";
+
+			cout << i->load()->getTitle();
+
+			cout << endl;
+		}
 
 		t.commit();
 

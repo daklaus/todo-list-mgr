@@ -10,21 +10,21 @@
 
 #include <string>
 #include <ctime>
-#include <vector>
 #include <memory>
 #include <stdexcept>
 #include <odb/core.hxx>
 #include <odb/lazy-ptr.hxx>
+#include <odb/vector.hxx>
 
 class todoList;
 
-typedef std::vector<odb::lazy_weak_ptr<todoList> > todoLists;
+typedef odb::vector<odb::lazy_weak_ptr<todoList> > todoLists;
 
 enum priority_t {
 	lowest, low, normal, high, highest
 };
 
-#pragma db object
+#pragma db object pointer(std::shared_ptr)
 class task {
 
 private:
@@ -46,10 +46,7 @@ private:
 	priority_t priority_;
 #pragma db default(false)
 	bool done_;
-#pragma db value_not_null \
-	id_column("task_id") \
-	value_column("todo_list_title") \
-	table("is_on")
+#pragma db value_not_null inverse(tasks_)
 	todoLists todoLists_;
 
 	void setUpdated();
@@ -75,6 +72,8 @@ public:
 	void setPriority(priority_t priority);
 
 	std::time_t getUpdated() const;
+
+	const todoLists& getTodoLists() const;
 };
 
 #ifdef ODB_COMPILER

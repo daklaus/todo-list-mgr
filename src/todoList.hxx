@@ -10,17 +10,17 @@
 
 #include <string>
 #include <ctime>
-#include <list>
 #include <memory>
 #include <stdexcept>
 #include <odb/core.hxx>
 #include <odb/lazy-ptr.hxx>
+#include <odb/vector.hxx>
 
 class task;
 
-typedef std::vector<odb::lazy_shared_ptr<task> > tasks;
+typedef odb::vector<odb::lazy_shared_ptr<task> > tasks;
 
-#pragma db object table("todo_list")
+#pragma db object table("todo_list") pointer(std::shared_ptr)
 class todoList {
 
 private:
@@ -33,7 +33,10 @@ private:
 	std::string title_;
 #pragma db options("DEFAULT CURRENT_TIMESTAMP")
 	std::time_t created_;
-#pragma db value_not_null inverse(todoLists_)
+#pragma db value_not_null \
+		id_column("todo_list_title") \
+		value_column("task_id") \
+		table("contains")
 	tasks tasks_;
 
 public:
@@ -46,10 +49,9 @@ public:
 
 	const tasks& getTasks() const;
 
-	void addTask(odb::lazy_shared_ptr<task>& task);
-	void addTask(odb::lazy_shared_ptr<task>& task, int position);
-	void removeTask(int position);
-
+	void addTask(const tasks::value_type& task);
+	void addTask(const tasks::value_type& task, size_t position);
+	void removeTask(size_t position);
 };
 
 #ifdef ODB_COMPILER

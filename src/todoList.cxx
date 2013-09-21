@@ -35,11 +35,12 @@ std::time_t todoList::getCreated() const {
 	return created_;
 }
 
-void todoList::addTask(odb::lazy_shared_ptr<task>& task) {
+void todoList::addTask(const odb::lazy_shared_ptr<task>& task) {
 	tasks_.push_back(task);
 }
 
-void todoList::addTask(odb::lazy_shared_ptr<task>& task, int position) {
+void todoList::addTask(const odb::lazy_shared_ptr<task>& task,
+		size_t position) {
 	tasks::iterator pos(tasks_.begin() + position);
 
 	if (pos > tasks_.end() || pos < tasks_.begin())
@@ -49,7 +50,7 @@ void todoList::addTask(odb::lazy_shared_ptr<task>& task, int position) {
 	tasks_.insert(pos, task);
 }
 
-void todoList::removeTask(int position) {
+void todoList::removeTask(size_t position) {
 	tasks::iterator pos(tasks_.begin() + position);
 
 	if (pos > tasks_.end() - 1 || pos < tasks_.begin())

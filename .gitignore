@@ -1,11 +1,26 @@
-Debug/*
-Release/*
-
+# ODB generated files
 /src/*-odb.*
 
-#!makefile
-#!*.mk
-#!Debug/src/subdir.mk
+# Debug directory
+Debug/*
+# ...except the src directory
+!Debug/src/
+# ...but only the directory
+Debug/src/*
+
+# Release directory
+Release/*
+# ...except the src directory
+!Release/src/
+# ...but only the directory
+Release/src/*
+
+
+!makefile
+!*.mk
+
+# Vim swap files
+*.swp
 
 # Compiled Object files
 *.slo
