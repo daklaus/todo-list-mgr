@@ -1,6 +1,9 @@
 # ODB generated files
 /src/*-odb.*
 
+# Database
+todo-list-mgr.db
+
 # Debug directory
 Debug/*
 # ...except the src directory
@@ -15,7 +18,7 @@ Release/*
 # ...but only the directory
 Release/src/*
 
-
+# Include the generated makefiles
 !makefile
 !*.mk
 

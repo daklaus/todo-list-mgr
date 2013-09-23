@@ -4,7 +4,8 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CXX_SRCS += \
-../src/driver.cxx \
+../src/preferences.cxx \
+../src/stringFunctions.cxx \
 ../src/task-odb.cxx \
 ../src/task.cxx \
 ../src/todo-list-mgr.cxx \
@@ -12,7 +13,8 @@ CXX_SRCS += \
 ../src/todoList.cxx 
 
 OBJS += \
-./src/driver.o \
+./src/preferences.o \
+./src/stringFunctions.o \
 ./src/task-odb.o \
 ./src/task.o \
 ./src/todo-list-mgr.o \
@@ -20,7 +22,8 @@ OBJS += \
 ./src/todoList.o 
 
 CXX_DEPS += \
-./src/driver.d \
+./src/preferences.d \
+./src/stringFunctions.d \
 ./src/task-odb.d \
 ./src/task.d \
 ./src/task-odb.d \
@@ -34,7 +37,7 @@ CXX_DEPS += \
 src/%.o: ../src/%.cxx
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
-	g++ -DDATABASE_SQLITE -O0 -g3 -pedantic -Wall -c -fmessage-length=0 -std=c++11 -Wno-unknown-pragmas -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	g++ -DDATABASE_SQLITE -DDEBUG -O0 -g3 -pedantic -Wall -c -fmessage-length=0 -std=c++11 -Wno-unknown-pragmas -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 
@@ -52,7 +55,7 @@ src/%.o: ../src/%.cxx
 src/%.o: ./src/%.cxx
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
-	g++ -DDATABASE_SQLITE -O0 -g3 -pedantic -Wall -c -fmessage-length=0 -std=c++11 -Wno-unknown-pragmas -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	g++ -DDATABASE_SQLITE -DDEBUG -O0 -g3 -pedantic -Wall -c -fmessage-length=0 -std=c++11 -Wno-unknown-pragmas -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

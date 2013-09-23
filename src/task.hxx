@@ -18,11 +18,24 @@
 
 class todoList;
 
+#define stringify( x ) # x
+
 typedef odb::vector<odb::lazy_weak_ptr<todoList> > todoLists;
 
-enum priority_t {
-	lowest, low, normal, high, highest
+enum priority_t { //
+	lowest = 0, //
+	low, //
+	normal, //
+	high, //
+	highest //
 };
+const std::vector<std::string> priority_strings = { //
+		stringify(lowest), //
+				stringify(low), //
+				stringify(normal), //
+				stringify(high), //
+				stringify(highest) //
+		};
 
 #pragma db object pointer(std::shared_ptr)
 class task {
@@ -36,11 +49,12 @@ private:
 #pragma db id auto
 	unsigned long id_;
 	std::string description_;
-#pragma db options("DEFAULT CURRENT_TIMESTAMP")
+	// TODO: Timestamp problems with sqlite
+#pragma db options("DEFAULT (datetime('now','localtime'))")
 	std::time_t created_;
 #pragma db null
 	std::time_t due_;
-#pragma db options("DEFAULT CURRENT_TIMESTAMP")
+#pragma db options("DEFAULT (datetime('now','localtime'))")
 	std::time_t updated_;
 #pragma db default(normal)
 	priority_t priority_;

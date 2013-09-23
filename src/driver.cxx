@@ -18,7 +18,7 @@ using namespace odb::core;
 
 int main(int argc, char* argv[]) {
 	try {
-		shared_ptr<database> db(create_database(argc, argv));
+		db_ptr db(create_database(argc, argv));
 
 		unsigned long first_id, second_id;
 

@@ -31,8 +31,9 @@ private:
 
 #pragma db id
 	std::string title_;
-#pragma db options("DEFAULT CURRENT_TIMESTAMP")
+#pragma db options("DEFAULT (datetime('now','localtime'))")
 	std::time_t created_;
+	// TODO: connection between task and list doesn't really function
 #pragma db value_not_null \
 		id_column("todo_list_title") \
 		value_column("task_id") \
