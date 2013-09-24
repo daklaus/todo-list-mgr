@@ -67,7 +67,13 @@ inline db_ptr create_database(int& argc, char* argv[]) {
 #if defined(DATABASE_MYSQL)
 	db_ptr db (new odb::mysql::database (argc, argv));
 #elif defined(DATABASE_SQLITE)
-	db_ptr db(new odb::sqlite::database(argc, argv, false, SQLITE_OPEN_READWRITE));
+	db_ptr db(
+			new odb::sqlite::database(argc, argv, false,
+					SQLITE_OPEN_READWRITE));
+
+#ifdef DEBUG
+	db->tracer(stderr_tracer);
+#endif
 
 	// Create the database schema. Due to bugs in SQLite foreign key
 	// support for DDL statements, we need to temporarily disable
@@ -79,7 +85,7 @@ inline db_ptr create_database(int& argc, char* argv[]) {
 		c->execute("PRAGMA foreign_keys=OFF");
 
 		transaction t(c->begin());
-		schema_catalog::create_schema(*db, "");
+		schema_catalog::create_schema(*db);
 		t.commit();
 
 		c->execute("PRAGMA foreign_keys=ON");

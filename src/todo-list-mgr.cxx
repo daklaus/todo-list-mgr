@@ -15,6 +15,7 @@
 #include <ctime>
 #include <sstream>
 #include <fstream>
+#include <locale>
 
 #include <odb/database.hxx>
 #include <odb/transaction.hxx>
@@ -135,8 +136,9 @@ typedef unordered_map<char, const listMenuEntry> listmenu_entries_t;
  */
 static char getCharFromLine(void);
 static void printMenu(const menu_t& menu, const string& menuName);
-static void readDue(time_t& due, bool askIfNull);
-static priority_t readPriority(void);
+static void readDue(time_t& due, bool askForOverwriteIfInputBlank);
+static void readPriority(priority_t& priority,
+		bool askForOverwriteIfInputBlank);
 static shared_ptr<todoList> selectList(const string& caption,
 		query<todoList> q = query<todoList>());
 static string openEditor(const string& text = "");
@@ -191,6 +193,7 @@ static const menu_entries_t prefMenuEntries = { //
 static const string menuPointPrefix = "* ";
 static const string menuPromptPrefix = "> ";
 static const string inputPromptPostfix = ": ";
+static const string dateFormat = "%d.%m.%Y";
 // TODO: Read editor from the command line with the Code Synthesis CLI project
 static const string editor = "/usr/bin/vim";
 
@@ -230,7 +233,11 @@ static void mainMenu(void) {
 			// If map contains the entry
 			entryIt->second.function();
 		}
-	} while (choice != 'q');
+	} while (choice != 'q' && !cin.eof());
+
+	if (cin.eof()) {
+		cout << endl;
+	}
 }
 
 /*
@@ -300,8 +307,15 @@ static menufunc_ret_t createTask(void) {
 	time_t due;
 	readDue(due, false);
 
+	if (cin.eof())
+		return;
+
 	// Read priority
-	priority_t priority(readPriority());
+	priority_t priority;
+	readPriority(priority, false);
+
+	if (cin.eof())
+		return;
 
 	// Select list
 	shared_ptr<todoList> list(
@@ -313,13 +327,23 @@ static menufunc_ret_t createTask(void) {
 	// Enter description
 	string desc(openEditor());
 
-	lazy_shared_ptr<task> ta(new task(desc, due, priority));
+#ifdef DEBUG
+	cout << "List before:" << endl;
+	printListTasks(*list);
+#endif
+
+	lazy_shared_ptr<task> ta(*db, new task(desc, due, priority));
 	list->addTask(ta);
 
 	transaction t(db->begin());
 	db->persist(*ta);
 	db->update(list);
 	t.commit();
+
+#ifdef DEBUG
+	cout << "List after:" << endl;
+	printListTasks(*list);
+#endif
 }
 
 static menufunc_ret_t editTask(void) {
@@ -328,7 +352,9 @@ static menufunc_ret_t editTask(void) {
 		return;
 	}
 
+	cout << "Task values:" << endl;
 	showTask(*ta);
+	cout << endl;
 
 	showTaskMenu(*ta);
 
@@ -344,15 +370,18 @@ static menufunc_ret_t editTask(void) {
 			// If map contains the entry
 			entryIt->second.function(*ta);
 		}
-	} while (choice != 'c');
+
+		// Exit task menu after task is deleted (choice was 'd')
+	} while (choice != 'c' && choice != 'd' && !cin.eof());
 }
 
 static menufunc_ret_t createList(void) {
 	cout << "List title" << inputPromptPostfix;
 
 	string input;
-	// FIXME: fix behaviour if EOT is recieved
 	getline(cin, input);
+	if (cin.eof())
+		return;
 	input = trim(input);
 
 	shared_ptr<todoList> list(new todoList(input));
@@ -382,7 +411,7 @@ static menufunc_ret_t editList(void) {
 			// If map contains the entry
 			entryIt->second.function(*li);
 		}
-	} while (choice != 'c');
+	} while (choice != 'c' && !cin.eof());
 }
 
 static menufunc_ret_t editPreferences(void) {
@@ -399,74 +428,147 @@ static menufunc_ret_t editPreferences(void) {
 			// If map contains the entry
 			entryIt->second.function();
 		}
-	} while (choice != 'c');
+	} while (choice != 'c' && !cin.eof());
 }
 
 /*
  * Task menu functions
  */
 
-static menufunc_ret_t showTaskMenu(taskmenufunc_param_t) {
+static menufunc_ret_t showTaskMenu(taskmenufunc_param_t task) {
 	printMenu(taskmenu, "Edit task menu");
 }
 
-static menufunc_ret_t editDescription(taskmenufunc_param_t) {
+static menufunc_ret_t editDescription(taskmenufunc_param_t task) {
+
+	task.setDescription(openEditor(task.getDescription()));
+
+	transaction t(db->begin());
+	db->update(task);
+	t.commit();
+}
+
+static menufunc_ret_t editDue(taskmenufunc_param_t task) {
+
+	time_t due(task.getDue());
+	readDue(due, true);
+
+	task.setDue(due);
+
+	transaction t(db->begin());
+	db->update(task);
+	t.commit();
+}
+
+static menufunc_ret_t editPriority(taskmenufunc_param_t task) {
+
+	priority_t priority(task.getPriority());
+	readPriority(priority, true);
+
+	task.setPriority(priority);
+
+	transaction t(db->begin());
+	db->update(task);
+	t.commit();
+}
+
+static menufunc_ret_t toggleDone(taskmenufunc_param_t task) {
+
+	task.setDone(!task.isDone());
+
+	transaction t(db->begin());
+	db->update(task);
+	t.commit();
+
+	cout << "Task set to ";
+	if (task.isDone())
+		cout << "done";
+	else
+		cout << "undone";
+	cout << "!" << endl;
+}
+
+static menufunc_ret_t addTaskToList(taskmenufunc_param_t task) {
 	// TODO: implement
+	cout << "Sorry, this function is not yet implemented" << endl;
 
 }
 
-static menufunc_ret_t editDue(taskmenufunc_param_t) {
+static menufunc_ret_t removeTaskFromList(taskmenufunc_param_t task) {
 	// TODO: implement
+	cout << "Sorry, this function is not yet implemented" << endl;
 
 }
 
-static menufunc_ret_t editPriority(taskmenufunc_param_t) {
+static menufunc_ret_t deleteTask(taskmenufunc_param_t task) {
 	// TODO: implement
+	cout << "Sorry, this function is not yet implemented" << endl;
 
 }
 
-static menufunc_ret_t toggleDone(taskmenufunc_param_t) {
-	// TODO: implement
+static menufunc_ret_t showTask(taskmenufunc_param_t task) {
+	cout << "Task ID: " << task.getId() << endl;
+	cout << "Priority: " << priority_strings.at(task.getPriority()) << endl;
+	cout << "Done: " << boolalpha << task.isDone() << noboolalpha << endl;
 
-}
+	{
+		char timeStrBuffer[50];
+		time_t rawTime(task.getCreated());
+		tm *brokenTime(localtime(&rawTime));
+		strftime(timeStrBuffer, 50, dateFormat.c_str(), brokenTime);
+		cout << "Created: " << timeStrBuffer << endl;
+	}
 
-static menufunc_ret_t addTaskToList(taskmenufunc_param_t) {
-	// TODO: implement
+	{
+		char timeStrBuffer[50];
+		time_t rawTime(task.getUpdated());
+		tm *brokenTime(localtime(&rawTime));
+		strftime(timeStrBuffer, 50, dateFormat.c_str(), brokenTime);
+		cout << "Last updated: " << timeStrBuffer << endl;
+	}
 
-}
+	cout << "Due: ";
+	if (task.getDue() <= 0) {
+		cout << "none";
+	} else {
+		char timeStrBuffer[50];
+		time_t rawTime(task.getDue());
+		tm *brokenTime(localtime(&rawTime));
+		strftime(timeStrBuffer, 50, dateFormat.c_str(), brokenTime);
+		cout << timeStrBuffer;
+	}
+	cout << endl;
 
-static menufunc_ret_t removeTaskFromList(taskmenufunc_param_t) {
-	// TODO: implement
+	transaction t(db->begin());
+	cout << "Lists:" << endl;
+	for (todoLists::const_iterator i(task.getTodoLists().begin());
+			i != task.getTodoLists().end(); ++i) {
+		cout << i->load()->getTitle() << endl;
+	}
 
-}
-
-static menufunc_ret_t deleteTask(taskmenufunc_param_t) {
-	// TODO: implement
-
-}
-
-static menufunc_ret_t showTask(taskmenufunc_param_t) {
-	// TODO: implement
-
+	cout << "Description:" << endl << task.getDescription() << endl;
 }
 
 /*
  * List menu functions
  */
 
-static menufunc_ret_t renameList(listmenufunc_param_t) {
+static menufunc_ret_t renameList(listmenufunc_param_t list) {
 	// TODO: implement
+	cout << "Sorry, this function is not yet implemented" << endl;
 }
 
-static menufunc_ret_t deleteList(listmenufunc_param_t) {
+static menufunc_ret_t deleteList(listmenufunc_param_t list) {
 	// TODO: implement
+	cout << "Sorry, this function is not yet implemented" << endl;
 }
 
-static menufunc_ret_t moveTask(listmenufunc_param_t) {
+static menufunc_ret_t moveTask(listmenufunc_param_t list) {
 	// TODO: implement
+	cout << "Sorry, this function is not yet implemented" << endl;
 }
 
-static menufunc_ret_t showListMenu(listmenufunc_param_t) {
+static menufunc_ret_t showListMenu(listmenufunc_param_t list) {
 	printMenu(listmenu, "Edit list menu");
 }
 
@@ -475,7 +577,13 @@ static menufunc_ret_t showListMenu(listmenufunc_param_t) {
  */
 
 static menufunc_ret_t toggleShowDoneTasks(void) {
-	// TODO: implement
+	preferences& pref = preferences::getInstance();
+	pref.setShowDoneTasks(!pref.showDoneTasks());
+
+	cout << "Done tasks will ";
+	if (!pref.showDoneTasks())
+		cout << "not ";
+	cout << "be shown on task lists!" << endl;
 }
 
 static menufunc_ret_t showPrefMenu(void) {
@@ -489,7 +597,6 @@ static menufunc_ret_t showPrefMenu(void) {
 static char getCharFromLine(void) {
 	string input;
 
-	// FIXME: fix behaviour if EOT is recieved
 	getline(cin, input);
 	input = trim(input);
 
@@ -500,8 +607,7 @@ static char getCharFromLine(void) {
 	return input.front();
 }
 
-static void readDue(time_t& due, bool askIfNull) {
-	const string dateFormat = "%d.%m.%Y";
+static void readDue(time_t& due, bool askForOverwriteIfInputBlank) {
 	string input;
 	char answer;
 	bool fail;
@@ -509,36 +615,37 @@ static void readDue(time_t& due, bool askIfNull) {
 
 	do {
 		fail = false;
+		tmpDue = 0;
 
 		cout << "Due (default: none; Format: " << dateFormat << ")"
 				<< inputPromptPostfix;
 
-		// FIXME: fix behaviour if EOT is recieved
 		getline(cin, input);
 		input = trim(input);
 
 		if (input.empty()) {
-			if (askIfNull) {
+			if (askForOverwriteIfInputBlank) {
 				cout
-						<< "Do you really want to overwrite 'due' with 'none' (y/n)? [n]"
+						<< "Do you really want to overwrite due with 'none' (y/n)? [n]"
 						<< inputPromptPostfix;
 				answer = getCharFromLine();
-				if (answer != 'y' && answer != 'Y') {
+				answer = tolower(answer);
+				if (answer != 'y') {
 					return;
 				}
 			}
-
-			due = 0;
-			return;
-		}
-
-		tm tmb;
-		if (strptime(input.c_str(), dateFormat.c_str(), &tmb) == NULL) {
-			fail = true;
 		} else {
-			tmpDue = mktime(&tmb);
-			if (tmpDue == -1) {
+
+			time_t rawTime(0);
+			tm *brokenTimePtr(localtime(&rawTime));
+			if (strptime(input.c_str(), dateFormat.c_str(),
+					brokenTimePtr) == NULL) {
 				fail = true;
+			} else {
+				tmpDue = mktime(brokenTimePtr);
+				if (tmpDue == -1) {
+					fail = true;
+				}
 			}
 		}
 
@@ -555,35 +662,45 @@ static void readDue(time_t& due, bool askIfNull) {
 #endif
 }
 
-static priority_t readPriority(void) {
+static void readPriority(priority_t& priority,
+		bool askForOverwriteIfInputBlank) {
 	string input;
-	priority_t priority;
 	bool fail;
+	priority_t tmpPriority;
+	char answer;
 
 	do {
 		fail = false;
-		priority = normal;
+		tmpPriority = normal;
 
-		cout << "Priority (default: " << static_cast<int>(priority)
-				<< "; Values: 0-" << priority_strings.size() - 1 << ")"
-				<< inputPromptPostfix;
+		cout << "Priority (default: " << tmpPriority << "; Values: 0-"
+				<< priority_strings.size() - 1 << ")" << inputPromptPostfix;
 
-		// FIXME: fix behaviour if EOT is recieved
 		getline(cin, input);
 		input = trim(input);
 
 		if (input.empty()) {
-			return priority;
-		}
-
-		size_t iPrio;
-		istringstream iss(input);
-		iss >> iPrio;
-
-		if (iss.fail() || iPrio < 0 || iPrio > priority_strings.size() - 1) {
-			fail = true;
+			if (askForOverwriteIfInputBlank) {
+				cout << "Do you really want to overwrite priority with "
+						<< tmpPriority << " (y/n)? [n]" << inputPromptPostfix;
+				answer = getCharFromLine();
+				answer = tolower(answer);
+				if (answer != 'y') {
+					return;
+				}
+			}
 		} else {
-			priority = static_cast<priority_t>(iPrio);
+
+			size_t iPrio;
+			istringstream iss(input);
+			iss >> iPrio;
+
+			if (iss.fail() || iPrio < 0
+					|| iPrio > priority_strings.size() - 1) {
+				fail = true;
+			} else {
+				tmpPriority = static_cast<priority_t>(iPrio);
+			}
 		}
 
 		if (fail) {
@@ -592,9 +709,10 @@ static priority_t readPriority(void) {
 	} while (fail);
 
 #ifdef DEBUG
-	cout << priority << endl;
+	cout << tmpPriority << endl;
 #endif
-	return priority;
+
+	priority = tmpPriority;
 }
 
 static shared_ptr<task> selectTask() {
@@ -612,7 +730,6 @@ static shared_ptr<task> selectTask() {
 
 		cout << "Enter task id" << inputPromptPostfix;
 
-		// FIXME: fix behaviour if EOT is recieved
 		getline(cin, input);
 		input = trim(input);
 
@@ -672,12 +789,13 @@ static shared_ptr<todoList> selectList(const string& caption,
 				i != vLists.end(); ++i, ++j) {
 			ostringstream oss;
 			oss << j + 1 << ")";
-			cout << setw(3) << left << oss.str() << i->getTitle() << endl;
+			cout << setw(3) << left << oss.str()
+					<< resetiosflags(ios_base::adjustfield) << i->getTitle()
+					<< endl;
 		}
 		cout << "Select" << inputPromptPostfix;
 
 		string input;
-		// FIXME: fix behaviour if EOT is recieved
 		getline(cin, input);
 		input = trim(input);
 
@@ -687,7 +805,7 @@ static shared_ptr<todoList> selectList(const string& caption,
 
 		istringstream iss(input);
 		iss >> listIdx;
-		listIdx--;
+		--listIdx;
 
 		if (iss.fail() || listIdx < 0 || listIdx > vLists.size() - 1) {
 			fail = true;
@@ -701,7 +819,6 @@ static shared_ptr<todoList> selectList(const string& caption,
 #ifdef DEBUG
 	cout << listIdx << endl;
 #endif
-
 	shared_ptr<todoList> ret(new todoList(vLists.at(listIdx)));
 
 #ifdef DEBUG

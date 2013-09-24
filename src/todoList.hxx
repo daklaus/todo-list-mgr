@@ -31,7 +31,7 @@ private:
 
 #pragma db id
 	std::string title_;
-#pragma db options("DEFAULT (datetime('now','localtime'))")
+#pragma db options("DEFAULT strftime('%s')")
 	std::time_t created_;
 	// TODO: connection between task and list doesn't really function
 #pragma db value_not_null \

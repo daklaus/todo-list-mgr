@@ -49,12 +49,11 @@ private:
 #pragma db id auto
 	unsigned long id_;
 	std::string description_;
-	// TODO: Timestamp problems with sqlite
-#pragma db options("DEFAULT (datetime('now','localtime'))")
+#pragma db options("DEFAULT strftime('%s')")
 	std::time_t created_;
 #pragma db null
 	std::time_t due_;
-#pragma db options("DEFAULT (datetime('now','localtime'))")
+#pragma db options("DEFAULT strftime('%s')")
 	std::time_t updated_;
 #pragma db default(normal)
 	priority_t priority_;
