@@ -888,18 +888,18 @@ static string openEditor(const string& text) {
 	tmpnam(filename);
 
 	// Write into it
-	fstream tmpfile(filename);
-	tmpfile << text;
-	tmpfile.close();
+	ofstream ofs(filename);
+	ofs << text;
+	ofs.close();
 
 	// Execute editor
 	std::string cmd = editor + " " + filename;
 	system(cmd.c_str());
 
 	// Read from it
-	tmpfile.open(filename);
+	ifstream ifs(filename);
 	stringstream buffer;
-	buffer << tmpfile.rdbuf();
+	buffer << ifs.rdbuf();
 	string ret(buffer.str());
 
 	// Remove the file
