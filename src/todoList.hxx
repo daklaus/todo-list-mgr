@@ -17,8 +17,9 @@
 #include <odb/vector.hxx>
 
 class task;
+//#include "task.hxx"
 
-typedef odb::vector<odb::lazy_shared_ptr<task> > tasks;
+typedef std::vector<odb::lazy_shared_ptr<task> > tasks;
 
 #pragma db object table("todo_list") pointer(std::shared_ptr)
 class todoList {
@@ -31,9 +32,8 @@ private:
 
 #pragma db id
 	std::string title_;
-#pragma db options("DEFAULT strftime('%s')")
+#pragma db options("DEFAULT (strftime('%s'))")
 	std::time_t created_;
-	// TODO: connection between task and list doesn't really function
 #pragma db value_not_null \
 		id_column("todo_list_title") \
 		value_column("task_id") \
@@ -53,6 +53,7 @@ public:
 	void addTask(const tasks::value_type& task);
 	void addTask(const tasks::value_type& task, size_t position);
 	void removeTask(size_t position);
+	void removeTask(const task& ta);
 };
 
 #ifdef ODB_COMPILER

@@ -156,7 +156,7 @@ static const menu_entries_t mainMenuEntries = { //
 		{ 'q', menuEntry("(Q)uit", doNothing) }, //
 				{ 'm', menuEntry("Show this (m)enu", showMainMenu) }, //
 				{ 'p', menuEntry("(P)references", editPreferences) }, //
-				{ 'd', menuEntry("E(d)it list", editList) }, //
+//				{ 'd', menuEntry("E(d)it list", editList) }, //
 				{ 'r', menuEntry("C(r)eate list", createList) }, //
 				{ 'e', menuEntry("(E)dit task", editTask) }, //
 				{ 'c', menuEntry("(C)reate task", createTask) }, //
@@ -167,10 +167,10 @@ static const taskmenu_entries_t taskMenuEntries = { //
 		{ 'c', taskMenuEntry("(C)ancel", doNothingWithTask) }, //
 				{ 'm', taskMenuEntry("Show this (m)enu", showTaskMenu) }, //
 				{ 's', taskMenuEntry("(S)how task", showTask) }, //
-				{ 'd', taskMenuEntry("(D)elete task", deleteTask) }, //
-				{ 'r', taskMenuEntry("(R)emove task from list",
-						removeTaskFromList) }, //
-				{ 'a', taskMenuEntry("(A)dd task to list", addTaskToList) }, //
+//				{ 'd', taskMenuEntry("(D)elete task", deleteTask) }, //
+//				{ 'r', taskMenuEntry("(R)emove task from list",
+//						removeTaskFromList) }, //
+//				{ 'a', taskMenuEntry("(A)dd task to list", addTaskToList) }, //
 				{ 'o', taskMenuEntry("Toggle d(o)ne", toggleDone) }, //
 				{ 'p', taskMenuEntry("Edit (p)riority", editPriority) }, //
 				{ 'u', taskMenuEntry("Edit d(u)e", editDue) }, //
@@ -488,7 +488,32 @@ static menufunc_ret_t toggleDone(taskmenufunc_param_t task) {
 	cout << "!" << endl;
 }
 
-static menufunc_ret_t addTaskToList(taskmenufunc_param_t task) {
+static menufunc_ret_t addTaskToList(taskmenufunc_param_t ta) {
+//	std::vector<string> listTitles;
+//	for (const todoLists::value_type& li : ta.getTodoLists()) {
+//		listTitles.push_back(li.object_id());
+//	}
+//
+//	typedef query<todoList> lq;
+//	shared_ptr<todoList> list(
+//			selectList("Select a list where to add the task",
+//					lq(
+//							!lq::title.in_range(listTitles.begin(),
+//									listTitles.end()))));
+//	if (!list) {
+//		return;
+//	}
+//
+//	lazy_shared_ptr<task> lsp(*db, &ta);
+//	list->addTask(lsp);
+//
+//	transaction t(db->begin());
+//	db->update(list);
+//	t.commit();
+//	t.reset(db->begin());
+//	db->reload(ta);
+//	t.commit();
+
 	// TODO: implement
 	cout << "Sorry, this function is not yet implemented" << endl;
 
@@ -501,6 +526,31 @@ static menufunc_ret_t removeTaskFromList(taskmenufunc_param_t task) {
 }
 
 static menufunc_ret_t deleteTask(taskmenufunc_param_t task) {
+
+//	cout << "Do you really want to delete the task (y/n)? [n]"
+//			<< inputPromptPostfix;
+//	char answer(getCharFromLine());
+//	answer = tolower(answer);
+//	if (answer != 'y') {
+//		return;
+//	}
+//
+//	transaction t(db->begin());
+//
+//	for (const todoLists::value_type& lwp : task.getTodoLists()) {
+//		shared_ptr<todoList> list(lwp.load());
+//
+//		list->removeTask(task);
+//		db->update(list);
+//	}
+//
+//	t.commit();
+//	t.reset(db->begin());
+//
+//	db->erase(task);
+//
+//	t.commit();
+
 	// TODO: implement
 	cout << "Sorry, this function is not yet implemented" << endl;
 

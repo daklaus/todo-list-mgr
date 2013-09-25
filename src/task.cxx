@@ -101,3 +101,7 @@ const todoLists& task::getTodoLists() const {
 //
 //	todoLists_.erase(pos);
 //}
+//
+//void task::clearTodoLists(void) {
+//	todoLists_.clear();
+//}

@@ -17,10 +17,11 @@
 #include <odb/vector.hxx>
 
 class todoList;
+//#include "todoList.hxx"
 
 #define stringify( x ) # x
 
-typedef odb::vector<odb::lazy_weak_ptr<todoList> > todoLists;
+typedef std::vector<odb::lazy_weak_ptr<todoList> > todoLists;
 
 enum priority_t { //
 	lowest = 0, //
@@ -49,11 +50,11 @@ private:
 #pragma db id auto
 	unsigned long id_;
 	std::string description_;
-#pragma db options("DEFAULT strftime('%s')")
+#pragma db options("DEFAULT (strftime('%s'))")
 	std::time_t created_;
 #pragma db null
 	std::time_t due_;
-#pragma db options("DEFAULT strftime('%s')")
+#pragma db options("DEFAULT (strftime('%s'))")
 	std::time_t updated_;
 #pragma db default(normal)
 	priority_t priority_;
@@ -87,6 +88,8 @@ public:
 	std::time_t getUpdated() const;
 
 	const todoLists& getTodoLists() const;
+
+//	void clearTodoLists(void);
 };
 
 #ifdef ODB_COMPILER

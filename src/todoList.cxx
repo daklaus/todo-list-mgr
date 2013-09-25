@@ -6,6 +6,8 @@
  */
 
 #include "todoList.hxx"
+#include "task-odb.hxx"
+#include "task.hxx"
 
 using namespace std;
 
@@ -58,4 +60,12 @@ void todoList::removeTask(size_t position) {
 				"The position is out of the range of the tasks vector");
 
 	tasks_.erase(pos);
+}
+
+void todoList::removeTask(const task& ta) {
+	for (tasks::iterator i(tasks_.begin()); i != tasks_.end(); ++i) {
+		if (i->object_id() == ta.getId()) {
+			i = tasks_.erase(i);
+		}
+	}
 }
